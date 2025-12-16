@@ -1,0 +1,129 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --santander-red: #EC0000;
+  --santander-dark-red: #B40000;
+  --santander-black: #1A1A1A;
+  --santander-gray: #767676;
+  --santander-light-gray: #F5F5F5;
+}
+
+body {
+  @apply bg-gray-50 text-santander-black;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}
+
+/* Custom components */
+@layer components {
+  .btn-primary {
+    @apply bg-santander-red text-white px-4 py-2 rounded-lg font-medium
+           hover:bg-santander-dark-red transition-colors duration-200
+           focus:outline-none focus:ring-2 focus:ring-santander-red focus:ring-offset-2;
+  }
+
+  .btn-secondary {
+    @apply bg-white text-santander-black border border-gray-300 px-4 py-2 rounded-lg font-medium
+           hover:bg-gray-50 transition-colors duration-200
+           focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg
+           focus:outline-none focus:ring-2 focus:ring-santander-red focus:border-transparent
+           placeholder:text-gray-400;
+  }
+
+  .chat-bubble-user {
+    @apply bg-santander-red text-white rounded-2xl rounded-br-sm px-4 py-3 max-w-[80%];
+  }
+
+  .chat-bubble-assistant {
+    @apply bg-white border border-gray-200 rounded-2xl rounded-bl-sm px-4 py-3 max-w-[80%];
+  }
+}
+
+/* Animations */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.thinking-dot {
+  animation: pulse-dot 1.4s ease-in-out infinite;
+}
+
+.thinking-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.thinking-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* Markdown styling in chat */
+.prose-chat {
+  @apply text-sm leading-relaxed;
+}
+
+.prose-chat h1, .prose-chat h2, .prose-chat h3 {
+  @apply font-semibold mt-4 mb-2;
+}
+
+.prose-chat p {
+  @apply mb-2;
+}
+
+.prose-chat ul, .prose-chat ol {
+  @apply ml-4 mb-2;
+}
+
+.prose-chat li {
+  @apply mb-1;
+}
+
+.prose-chat code {
+  @apply bg-gray-100 px-1 py-0.5 rounded text-sm font-mono;
+}
+
+.prose-chat pre {
+  @apply bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto my-3;
+}
+
+.prose-chat pre code {
+  @apply bg-transparent p-0;
+}
+
+.prose-chat table {
+  @apply w-full border-collapse my-3;
+}
+
+.prose-chat th, .prose-chat td {
+  @apply border border-gray-300 px-3 py-2 text-left;
+}
+
+.prose-chat th {
+  @apply bg-gray-100 font-semibold;
+}

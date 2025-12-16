@@ -1,0 +1,28 @@
+# Render Blueprint for BRIS Backend
+
+services:
+  - type: web
+    name: bris-api
+    env: docker
+    region: frankfurt  # EU region for GDPR compliance
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false  # Set manually in Render dashboard
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: LLM_PROVIDER
+        value: openai
+      - key: FRONTEND_URL
+        value: https://bris-frontend.vercel.app
+      - key: CHROMA_PERSIST_DIR
+        value: /app/vectordb
+      - key: CHROMA_COLLECTION
+        value: bris_documents
+    disk:
+      name: vectordb
+      mountPath: /app/vectordb
+      sizeGB: 10
