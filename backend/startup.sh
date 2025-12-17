@@ -6,9 +6,11 @@ VECTORDB_PATH="/app/vectordb"
 VECTORDB_URL="https://github.com/DavidS-bot/bris-webapp/releases/download/v1.0.0/vectordb.tar.gz"
 
 echo "=== BRIS Backend Starting ==="
+echo "Checking vectordb at: $VECTORDB_PATH"
+ls -la "$VECTORDB_PATH" 2>/dev/null || echo "Directory does not exist"
 
-# Check if vectordb exists and has data
-if [ ! -d "$VECTORDB_PATH/chroma.sqlite3" ] && [ ! -f "$VECTORDB_PATH/chroma.sqlite3" ]; then
+# Check if vectordb exists (chroma.sqlite3 is the main file)
+if [ ! -f "$VECTORDB_PATH/chroma.sqlite3" ]; then
     echo "VectorDB not found. Downloading from GitHub Releases..."
     echo "This will take a few minutes (739MB)..."
 
