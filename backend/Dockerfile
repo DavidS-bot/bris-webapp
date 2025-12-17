@@ -26,13 +26,20 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy application code
 COPY . .
 
-# Create directory for ChromaDB and download vectordb from GitHub Releases
-RUN mkdir -p /app/vectordb && \
-    echo "Downloading vectordb from GitHub Releases..." && \
-    curl -L -o /tmp/vectordb.tar.gz https://github.com/DavidS-bot/bris-webapp/releases/download/v1.0.0/vectordb.tar.gz && \
-    echo "Extracting vectordb (58,466 chunks)..." && \
+# Create directory for ChromaDB
+RUN mkdir -p /app/vectordb
+
+# Download vectordb from GitHub Releases (739MB)
+RUN echo "Downloading vectordb from GitHub Releases..." && \
+    curl -L --fail --retry 3 --retry-delay 5 -o /tmp/vectordb.tar.gz \
+    "https://github.com/DavidS-bot/bris-webapp/releases/download/v1.0.0/vectordb.tar.gz" && \
+    ls -lh /tmp/vectordb.tar.gz
+
+# Extract vectordb
+RUN echo "Extracting vectordb (58,466 chunks)..." && \
     tar -xzf /tmp/vectordb.tar.gz -C /app/ && \
     rm /tmp/vectordb.tar.gz && \
+    ls -la /app/vectordb && \
     echo "VectorDB ready!"
 
 # Expose port
