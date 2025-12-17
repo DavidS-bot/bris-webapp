@@ -26,28 +26,19 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy application code
 COPY . .
 
-# Create directory for ChromaDB
+# Create directory for ChromaDB (will be mounted as Render Disk)
 RUN mkdir -p /app/vectordb
 
-# Download vectordb from GitHub Releases (739MB)
-RUN echo "Downloading vectordb from GitHub Releases..." && \
-    curl -L --fail --retry 3 --retry-delay 5 -o /tmp/vectordb.tar.gz \
-    "https://github.com/DavidS-bot/bris-webapp/releases/download/v1.0.0/vectordb.tar.gz" && \
-    ls -lh /tmp/vectordb.tar.gz
-
-# Extract vectordb
-RUN echo "Extracting vectordb (58,466 chunks)..." && \
-    tar -xzf /tmp/vectordb.tar.gz -C /app/ && \
-    rm /tmp/vectordb.tar.gz && \
-    ls -la /app/vectordb && \
-    echo "VectorDB ready!"
+# Copy startup script and make executable
+COPY startup.sh /app/startup.sh
+RUN chmod +x /app/startup.sh
 
 # Expose port
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+# Health check (longer start period to allow vectordb download)
+HEALTHCHECK --interval=30s --timeout=30s --start-period=300s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run startup script (downloads vectordb if needed, then starts uvicorn)
+CMD ["/app/startup.sh"]
