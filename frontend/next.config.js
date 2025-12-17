@@ -1,16 +1,11 @@
 /** @type {import('next').NextConfig} */
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://bris-api.onrender.com';
+
 const nextConfig = {
   reactStrictMode: true,
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
-  },
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL}/api/:path*`,
-      },
-    ];
+    NEXT_PUBLIC_API_URL: API_URL,
   },
 };
 
