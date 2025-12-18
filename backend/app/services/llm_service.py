@@ -157,7 +157,7 @@ class LLMService:
         client = self._get_anthropic_client()
 
         response = client.messages.create(
-            model=os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022"),
+            model=os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-20250514"),
             max_tokens=2000,
             system=system_prompt,
             messages=messages
