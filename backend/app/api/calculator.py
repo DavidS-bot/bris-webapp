@@ -367,3 +367,74 @@ async def calculate_rwa(request: RWARequest):
         raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+# ============================================================================
+# LCR Calculator
+# ============================================================================
+
+@router. post("/lcr", response_model=LCRResult)
+async def calculate_lcr(request: LCRRequest):
+    """Calculate Liquidity Coverage Ratio."""
+    try:
+        # Apply haircuts to HQLA
+        l1_adjusted = request.hqla_level1 * 1.0  # No haircut
+        l2a_adjusted = request.hqla_level2a * 0.85  # 15% haircut
+        l2b_adjusted = request.hqla_level2b * 0.50  # 50% haircut
+        
+        # Calculate total before caps
+        hqla_total = request.hqla_level1 + request.hqla_level2a + request.hqla_level2b
+        hqla_adjusted_pre_cap = l1_adjusted + l2a_adjusted + l2b_adjusted
+        
+        # Apply caps
+        caps_applied = {}
+        
+        # L2 total cap:  max 40% of total HQLA
+        l2_total = l2a_adjusted + l2b_adjusted
+        l2_cap = l1_adjusted * (40/60)  # L2 can be max 40%, so L1 must be 60%
+        if l2_total > l2_cap:
+            reduction_factor = l2_cap / l2_total
+            l2a_adjusted *= reduction_factor
+            l2b_adjusted *= reduction_factor
+            caps_applied["L2_cap"] = f"Level 2 capped to 40% (reduced by {(1-reduction_factor)*100:.1f}%)"
+        
+        # L2B cap: max 15% of total HQLA
+        l2b_cap = (l1_adjusted + l2a_adjusted) * (15/85)
+        if l2b_adjusted > l2b_cap: 
+            caps_applied["L2B_cap"] = f"Level 2B capped to 15%"
+            l2b_adjusted = l2b_cap
+        
+        hqla_adjusted = l1_adjusted + l2a_adjusted + l2b_adjusted
+        
+        # Calculate outflows with runoff rates
+        outflows = {
+            "retail_stable": request.retail_deposits_stable * 0.05,
+            "retail_less_stable": request.retail_deposits_less_stable * 0.10,
+            "wholesale_operational": request.wholesale_operational * 0.25,
+            "wholesale_non_operational": request.wholesale_non_operational * 0.40,
+            "secured_funding": request.secured_funding,
+            "other": request.other_outflows
+        }
+        total_outflows = sum(outflows.values())
+        
+        # Calculate inflows (capped at 75% of outflows)
+        inflows = {
+            "retail":  request.retail_inflows,
+            "wholesale": request.wholesale_inflows,
+            "other": request.other_inflows
+        }
+        total_inflows = sum(inflows.values())
+        inflow_cap = total_outflows * 0.75
+        total_inflows_capped = min(total_inflows, inflow_cap)
+        
+        if total_inflows > inflow_cap:
+            caps_applied["inflow_cap"] = f"Inflows capped at 75% of outflows"
+        
+        # Net outflows
+        net_outflows = total_outflows - total_inflows_capped
+        
+        # Calculate LCR
+        lcr = hqla_adjusted / net_outflows if net_outflows > 0 else float('inf')
+        
+        # Minimum requirement is 100%
+        minimum =*
+
