@@ -609,14 +609,14 @@ async def calculate_cva_risk(request: CVARequest):
             df = max(1, cp.maturity)
             
             # CVA capital for this counterparty
-            cva_capital = 2. 33 * rw * df * cp. ead
+            cva_capital = 2.33 * rw * df * cp.ead
             
             # Hedging benefit (simplified)
-            hedge_benefit = min(cp.hedge_notional, cp. ead) * rw * 0.5
+            hedge_benefit = min(cp.hedge_notional, cp.ead) * rw * 0.5
             
             net_cva = max(0, cva_capital - hedge_benefit)
             
-            cva_by_counterparty. append({
+            cva_by_counterparty.append({
                 "name": cp.name,
                 "ead": cp.ead,
                 "rating": cp.rating,
