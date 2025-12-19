@@ -21,6 +21,7 @@ interface Source {
   url: string
   document_types: string[]
   status: string
+  scraping_enabled?: boolean
   last_scraped?: string
 }
 
@@ -57,6 +58,7 @@ export default function AdminPage() {
   const [discoveredDocs, setDiscoveredDocs] = useState<DiscoveredDoc[]>([])
   const [discoveringSource, setDiscoveringSource] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [isProductionMode, setIsProductionMode] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -71,6 +73,10 @@ export default function AdminPage() {
       if (sourcesRes.ok) {
         const data = await sourcesRes.json()
         setSources(data.sources)
+        // Check if any source indicates production mode
+        if (data.sources.length > 0 && data.sources[0].scraping_enabled === false) {
+          setIsProductionMode(true)
+        }
       }
 
       // Fetch indexed stats
@@ -192,6 +198,28 @@ export default function AdminPage() {
         </p>
       </div>
 
+      {/* Production Mode Banner */}
+      {isProductionMode && (
+        <div className="mx-6 mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <div className="flex items-start space-x-3">
+            <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5" />
+            <div>
+              <p className="font-medium text-amber-800">Modo Produccion</p>
+              <p className="text-sm text-amber-700 mt-1">
+                El scraping automatico no esta disponible en el servidor desplegado.
+                Para actualizar el RAG con nuevos documentos:
+              </p>
+              <ol className="text-sm text-amber-700 mt-2 list-decimal ml-4 space-y-1">
+                <li>Ejecuta localmente: <code className="bg-amber-100 px-1 rounded">python -m src.scrapers.cli --source eba</code></li>
+                <li>Indexa: <code className="bg-amber-100 px-1 rounded">python -m src.indexer.index_documents</code></li>
+                <li>Comprime: <code className="bg-amber-100 px-1 rounded">tar -czf vectordb.tar.gz vectordb/</code></li>
+                <li>Sube a GitHub Releases y redeploy en Render</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      )}
+
       {error && (
         <div className="mx-6 mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-3">
           <AlertCircle className="w-5 h-5 text-red-500" />
@@ -295,8 +323,12 @@ export default function AdminPage() {
                           <h4 className="font-medium text-gray-900">
                             {source.name}
                           </h4>
-                          <span className="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded">
-                            {source.status}
+                          <span className={`px-2 py-0.5 text-xs rounded ${
+                            source.status === 'local_only'
+                              ? 'bg-amber-100 text-amber-700'
+                              : 'bg-green-100 text-green-700'
+                          }`}>
+                            {source.status === 'local_only' ? 'Solo local' : source.status}
                           </span>
                         </div>
                         <a
@@ -331,8 +363,9 @@ export default function AdminPage() {
                       <div className="flex space-x-2">
                         <button
                           onClick={() => discoverDocuments(source.id)}
-                          disabled={discoveringSource === source.id}
-                          className="btn-secondary text-sm flex items-center space-x-1"
+                          disabled={discoveringSource === source.id || isProductionMode}
+                          className={`btn-secondary text-sm flex items-center space-x-1 ${isProductionMode ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          title={isProductionMode ? 'No disponible en produccion' : 'Descubrir nuevos documentos'}
                         >
                           {discoveringSource === source.id ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
@@ -343,8 +376,9 @@ export default function AdminPage() {
                         </button>
                         <button
                           onClick={() => startScraping(source.id)}
-                          disabled={scrapingSource === source.id}
-                          className="btn-primary text-sm flex items-center space-x-1"
+                          disabled={scrapingSource === source.id || isProductionMode}
+                          className={`btn-primary text-sm flex items-center space-x-1 ${isProductionMode ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          title={isProductionMode ? 'No disponible en produccion' : 'Actualizar RAG'}
                         >
                           {scrapingSource === source.id ? (
                             <Loader2 className="w-4 h-4 animate-spin" />

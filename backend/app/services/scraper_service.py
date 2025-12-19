@@ -2,6 +2,10 @@
 Scraper Service for automatic document updates.
 
 Provides integration with the scraping system for the web interface.
+
+NOTE: Full scraping functionality is only available when running locally.
+In the deployed version (Render), scraping is disabled and should be done
+locally, then the vectordb uploaded to GitHub Releases.
 """
 
 import asyncio
@@ -11,10 +15,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
-# Add project root to path for imports
-project_root = Path(__file__).parent.parent.parent.parent.parent
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
+# Check if we're running in production (Render)
+IS_PRODUCTION = os.getenv("RENDER", "false").lower() == "true" or os.getenv("IS_PRODUCTION", "false").lower() == "true"
+
+# Try to add project root to path for local development
+if not IS_PRODUCTION:
+    project_root = Path(__file__).parent.parent.parent.parent.parent
+    if str(project_root) not in sys.path:
+        sys.path.insert(0, str(project_root))
 
 
 class ScraperService:
@@ -27,53 +35,57 @@ class ScraperService:
 
     async def get_available_sources(self) -> List[Dict[str, Any]]:
         """Get list of available regulatory sources."""
+        # Status depends on whether we're in production or local
+        status = "local_only" if IS_PRODUCTION else "available"
+
         sources = [
             {
                 "id": "eba",
                 "name": "European Banking Authority (EBA)",
                 "url": "https://www.eba.europa.eu",
                 "document_types": ["RTS", "ITS", "Guidelines", "Recommendations", "Q&A"],
-                "status": "available"
+                "status": status
             },
             {
                 "id": "ecb",
                 "name": "European Central Bank (ECB)",
                 "url": "https://www.ecb.europa.eu",
                 "document_types": ["Regulations", "Decisions", "Guidelines", "Opinions"],
-                "status": "available"
+                "status": status
             },
             {
                 "id": "bis",
                 "name": "Bank for International Settlements (BIS)",
                 "url": "https://www.bis.org",
                 "document_types": ["Basel Framework", "Standards", "Guidelines"],
-                "status": "available"
+                "status": status
             },
             {
                 "id": "esma",
                 "name": "European Securities and Markets Authority (ESMA)",
                 "url": "https://www.esma.europa.eu",
                 "document_types": ["Guidelines", "Technical Standards"],
-                "status": "available"
+                "status": status
             },
             {
                 "id": "srb",
                 "name": "Single Resolution Board (SRB)",
                 "url": "https://www.srb.europa.eu",
                 "document_types": ["MREL Policies", "Resolution Guidelines"],
-                "status": "available"
+                "status": status
             },
             {
                 "id": "fsb",
                 "name": "Financial Stability Board (FSB)",
                 "url": "https://www.fsb.org",
                 "document_types": ["Standards", "Policy Documents"],
-                "status": "available"
+                "status": status
             },
         ]
 
-        # Add last scrape info
+        # Add last scrape info and production flag
         for source in sources:
+            source["scraping_enabled"] = not IS_PRODUCTION
             if source["id"] in self.last_scrape:
                 source["last_scraped"] = self.last_scrape[source["id"]].isoformat()
 
@@ -85,6 +97,15 @@ class ScraperService:
 
         Returns list of documents found that are not yet indexed.
         """
+        # In production, scraping is not available
+        if IS_PRODUCTION:
+            return {
+                "error": "Scraping no disponible en produccion. Ejecuta el scraping localmente.",
+                "documents": [],
+                "production_mode": True,
+                "instructions": "Usa 'python -m src.scrapers.cli --source eba' localmente"
+            }
+
         try:
             scraper = await self._get_scraper(source_id)
             if not scraper:
@@ -122,6 +143,21 @@ class ScraperService:
         """
         Scrape documents from source and index them into the RAG.
         """
+        # In production, scraping is not available
+        if IS_PRODUCTION:
+            return {
+                "success": False,
+                "error": "Scraping no disponible en produccion",
+                "production_mode": True,
+                "instructions": [
+                    "1. Ejecuta localmente: python -m src.scrapers.cli --source " + source_id,
+                    "2. Indexa: python -m src.indexer.index_documents",
+                    "3. Comprime: tar -czf vectordb.tar.gz vectordb/",
+                    "4. Sube a GitHub Releases",
+                    "5. Redeploy en Render"
+                ]
+            }
+
         async with self._lock:
             try:
                 from src.scrapers.base_scraper import ScrapingResult
