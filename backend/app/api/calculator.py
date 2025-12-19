@@ -9,7 +9,13 @@ from typing import Dict, Any
 from app.models.schemas import (
     SecuritizationRequest, SecuritizationResult, SecuritizationComparison,
     LeverageRatioRequest, LeverageRatioResult,
-    RWARequest, RWAResult
+    RWARequest, RWAResult,
+    LCRRequest, LCRResult,
+    NSFRRequest, NSFRResult,
+    MRELRequest, MRELResult,
+    CVARequest, CVAResult, CounterpartyExposure,
+    LargeExposuresRequest, LargeExposuresResult, LargeExposure,
+    IRRBBRequest, IRRBBResult, IRRBBScenarioResult
 )
 
 router = APIRouter()
@@ -372,7 +378,7 @@ async def calculate_rwa(request: RWARequest):
 # LCR Calculator
 # ============================================================================
 
-@router. post("/lcr", response_model=LCRResult)
+@router.post("/lcr", response_model=LCRResult)
 async def calculate_lcr(request: LCRRequest):
     """Calculate Liquidity Coverage Ratio."""
     try:
