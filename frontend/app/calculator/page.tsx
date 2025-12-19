@@ -683,7 +683,7 @@ function IRRBBCalculator() {
 
     // Simplified IRRBB - parallel +200bp shock
     const shock = 0.02; // 200bp = 2%
-    const duration1y = 1. 0;
+    const duration1y = 1.0;
     const duration5y = 4.5;
     const duration10y = 8.0;
 
