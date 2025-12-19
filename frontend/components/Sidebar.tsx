@@ -8,13 +8,15 @@ import {
   FileText,
   Settings,
   Building2,
-  HelpCircle
+  HelpCircle,
+  RefreshCw
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Chat', href: '/chat', icon: MessageSquare },
   { name: 'Calculadoras', href: '/calculator', icon: Calculator },
   { name: 'Documentos', href: '/documents', icon: FileText },
+  { name: 'Admin RAG', href: '/admin', icon: RefreshCw },
 ]
 
 export function Sidebar() {

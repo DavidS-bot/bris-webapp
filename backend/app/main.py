@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import os
 
-from app.api import chat, calculator, documents, health
+from app.api import chat, calculator, documents, health, admin
 from app.core.config import settings
 from app.services.rag_service import RAGService
 
@@ -50,6 +50,7 @@ app.include_router(health.router, tags=["Health"])
 app.include_router(chat.router, prefix="/api/v1/chat", tags=["Chat"])
 app.include_router(calculator.router, prefix="/api/v1/calculator", tags=["Calculator"])
 app.include_router(documents.router, prefix="/api/v1/documents", tags=["Documents"])
+app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
 
 
 @app.get("/")
@@ -64,6 +65,7 @@ async def root():
             "chat": "/api/v1/chat",
             "calculator": "/api/v1/calculator",
             "documents": "/api/v1/documents",
+            "admin": "/api/v1/admin",
             "health": "/health"
         }
     }
