@@ -20,7 +20,16 @@ class RAGService:
             import chromadb
             from openai import OpenAI
 
-            # Initialize ChromaDB
+            # Close existing client if any (important for hot reload)
+            if hasattr(self, 'client') and self.client is not None:
+                try:
+                    del self.client
+                    self.client = None
+                    self.collection = None
+                except:
+                    pass
+
+            # Initialize ChromaDB with fresh connection
             persist_dir = os.getenv("CHROMA_PERSIST_DIR", "./vectordb")
             collection_name = os.getenv("CHROMA_COLLECTION", "bris_documents")
 
