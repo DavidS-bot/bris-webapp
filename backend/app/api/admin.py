@@ -280,16 +280,34 @@ async def update_vectordb(
 
             print("Download complete. Extracting...")
 
-            # Backup existing vectordb
-            backup_dir = f"{VECTORDB_DIR}_backup"
+            # IMPORTANT: Close ChromaDB connection before replacing files
+            if hasattr(request.app.state.rag_service, 'client'):
+                try:
+                    del request.app.state.rag_service.client
+                    request.app.state.rag_service.client = None
+                    request.app.state.rag_service.collection = None
+                except:
+                    pass
+
+            # Completely remove existing vectordb (no backup - clean install)
             if os.path.exists(VECTORDB_DIR):
-                if os.path.exists(backup_dir):
-                    shutil.rmtree(backup_dir)
-                shutil.move(VECTORDB_DIR, backup_dir)
+                print(f"Removing existing vectordb at {VECTORDB_DIR}...")
+                shutil.rmtree(VECTORDB_DIR)
+
+            # Also remove any backup
+            backup_dir = f"{VECTORDB_DIR}_backup"
+            if os.path.exists(backup_dir):
+                shutil.rmtree(backup_dir)
 
             # Extract new vectordb
+            print(f"Extracting to {os.path.dirname(VECTORDB_DIR)}...")
             with tarfile.open(tar_path, "r:gz") as tar:
                 tar.extractall(path=os.path.dirname(VECTORDB_DIR))
+
+            # List extracted files for debugging
+            if os.path.exists(VECTORDB_DIR):
+                files = os.listdir(VECTORDB_DIR)
+                print(f"Extracted files in {VECTORDB_DIR}: {files}")
 
             # Clean up
             os.remove(tar_path)
@@ -313,10 +331,8 @@ async def update_vectordb(
 
     except Exception as e:
         print(f"Error updating vectordb: {e}")
-        # Restore backup if exists
-        backup_dir = f"{VECTORDB_DIR}_backup"
-        if os.path.exists(backup_dir) and not os.path.exists(VECTORDB_DIR):
-            shutil.move(backup_dir, VECTORDB_DIR)
+        import traceback
+        traceback.print_exc()
         return {"error": str(e), "status": "failed"}
 
 
