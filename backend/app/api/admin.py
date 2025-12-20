@@ -217,3 +217,125 @@ async def trigger_reindex(
         "message": "Reindexing started",
         "status": "running"
     }
+
+
+@router.post("/update-vectordb")
+async def update_vectordb(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    version: str = "latest"
+):
+    """
+    Download and update the vectordb from GitHub releases.
+
+    Args:
+        version: Release version (e.g., "v1.1.0") or "latest"
+    """
+    import os
+    import shutil
+    import tarfile
+    import httpx
+
+    GITHUB_REPO = "DavidS-bot/bris-webapp"
+    VECTORDB_DIR = os.getenv("CHROMA_PERSIST_DIR", "./vectordb")
+
+    async def download_and_extract():
+        try:
+            # Get release info
+            if version == "latest":
+                release_url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+            else:
+                release_url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/tags/{version}"
+
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                # Get release metadata
+                response = await client.get(release_url)
+                response.raise_for_status()
+                release_data = response.json()
+
+                # Find vectordb.tar.gz asset
+                asset_url = None
+                for asset in release_data.get("assets", []):
+                    if asset["name"] == "vectordb.tar.gz":
+                        asset_url = asset["browser_download_url"]
+                        break
+
+                if not asset_url:
+                    print(f"No vectordb.tar.gz found in release {version}")
+                    return
+
+                print(f"Downloading vectordb from {asset_url}...")
+
+                # Download the file
+                async with client.stream("GET", asset_url, follow_redirects=True, timeout=600.0) as stream:
+                    stream.raise_for_status()
+                    tar_path = "/tmp/vectordb.tar.gz"
+                    with open(tar_path, "wb") as f:
+                        async for chunk in stream.aiter_bytes(chunk_size=8192):
+                            f.write(chunk)
+
+                print("Download complete. Extracting...")
+
+                # Backup existing vectordb
+                backup_dir = f"{VECTORDB_DIR}_backup"
+                if os.path.exists(VECTORDB_DIR):
+                    if os.path.exists(backup_dir):
+                        shutil.rmtree(backup_dir)
+                    shutil.move(VECTORDB_DIR, backup_dir)
+
+                # Extract new vectordb
+                with tarfile.open(tar_path, "r:gz") as tar:
+                    tar.extractall(path=os.path.dirname(VECTORDB_DIR))
+
+                # Clean up
+                os.remove(tar_path)
+                if os.path.exists(backup_dir):
+                    shutil.rmtree(backup_dir)
+
+                print(f"VectorDB updated successfully from release {release_data['tag_name']}")
+
+                # Reinitialize RAG service
+                await request.app.state.rag_service.initialize()
+
+        except Exception as e:
+            print(f"Error updating vectordb: {e}")
+            # Restore backup if exists
+            backup_dir = f"{VECTORDB_DIR}_backup"
+            if os.path.exists(backup_dir) and not os.path.exists(VECTORDB_DIR):
+                shutil.move(backup_dir, VECTORDB_DIR)
+
+    background_tasks.add_task(download_and_extract)
+
+    return {
+        "message": f"VectorDB update started (version: {version})",
+        "status": "running",
+        "note": "This may take several minutes for large databases"
+    }
+
+
+@router.get("/vectordb-info")
+async def get_vectordb_info(request: Request):
+    """Get information about the current vectordb."""
+    import os
+
+    rag_service = request.app.state.rag_service
+    vectordb_dir = os.getenv("CHROMA_PERSIST_DIR", "./vectordb")
+
+    # Get size
+    total_size = 0
+    if os.path.exists(vectordb_dir):
+        for dirpath, dirnames, filenames in os.walk(vectordb_dir):
+            for f in filenames:
+                fp = os.path.join(dirpath, f)
+                total_size += os.path.getsize(fp)
+
+    stats = await rag_service.get_stats()
+
+    return {
+        "path": vectordb_dir,
+        "size_mb": round(total_size / (1024 * 1024), 2),
+        "total_chunks": stats.get("total_chunks", 0),
+        "total_documents": stats.get("total_documents", 0),
+        "by_authority": stats.get("authorities", {}),
+        "by_topic": stats.get("topics", {})
+    }
