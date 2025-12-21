@@ -201,10 +201,13 @@ export default function ChatPage() {
                           th: ({ children, style }) => <MarkdownTh style={style}>{children}</MarkdownTh>,
                           td: ({ children, style }) => <MarkdownTd style={style}>{children}</MarkdownTd>,
                           // Custom code block handler for charts
-                          code: ({ className, children, ...props }) => {
+                          code: ({ node, className, children, ...props }: any) => {
                             const match = /language-(\w+)/.exec(className || '')
                             const language = match ? match[1] : ''
                             const codeContent = String(children).replace(/\n$/, '')
+
+                            // Check if this is inline code (no language = inline)
+                            const isInline = !className && !node?.position?.start?.line
 
                             // Check if this is a chart specification
                             if (language === 'chart') {
@@ -214,8 +217,8 @@ export default function ChatPage() {
                               }
                             }
 
-                            // Regular code block
-                            if (language) {
+                            // Regular code block (has language)
+                            if (language || !isInline) {
                               return (
                                 <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto my-3">
                                   <code className={className} {...props}>
@@ -232,7 +235,7 @@ export default function ChatPage() {
                               </code>
                             )
                           },
-                          // Better pre handling
+                          // Pass through pre - code handler takes care of wrapping
                           pre: ({ children }) => <>{children}</>,
                         }}
                       >
