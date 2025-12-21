@@ -1,8 +1,18 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { Send, Loader2, Sparkles, FileText, RefreshCw } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import { ChartRenderer, parseChartFromCode } from '@/components/charts'
+import {
+  MarkdownTable,
+  MarkdownThead,
+  MarkdownTbody,
+  MarkdownTr,
+  MarkdownTh,
+  MarkdownTd,
+} from '@/components/tables'
 
 interface Message {
   id: string
@@ -180,7 +190,54 @@ export default function ChatPage() {
                 >
                   {message.role === 'assistant' ? (
                     <div className="prose-chat">
-                      <ReactMarkdown>{message.content}</ReactMarkdown>
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          // Custom table components with Santander styling
+                          table: ({ children }) => <MarkdownTable>{children}</MarkdownTable>,
+                          thead: ({ children }) => <MarkdownThead>{children}</MarkdownThead>,
+                          tbody: ({ children }) => <MarkdownTbody>{children}</MarkdownTbody>,
+                          tr: ({ children }) => <MarkdownTr>{children}</MarkdownTr>,
+                          th: ({ children, style }) => <MarkdownTh style={style}>{children}</MarkdownTh>,
+                          td: ({ children, style }) => <MarkdownTd style={style}>{children}</MarkdownTd>,
+                          // Custom code block handler for charts
+                          code: ({ className, children, ...props }) => {
+                            const match = /language-(\w+)/.exec(className || '')
+                            const language = match ? match[1] : ''
+                            const codeContent = String(children).replace(/\n$/, '')
+
+                            // Check if this is a chart specification
+                            if (language === 'chart') {
+                              const chartSpec = parseChartFromCode(codeContent)
+                              if (chartSpec) {
+                                return <ChartRenderer spec={chartSpec} />
+                              }
+                            }
+
+                            // Regular code block
+                            if (language) {
+                              return (
+                                <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto my-3">
+                                  <code className={className} {...props}>
+                                    {children}
+                                  </code>
+                                </pre>
+                              )
+                            }
+
+                            // Inline code
+                            return (
+                              <code className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono" {...props}>
+                                {children}
+                              </code>
+                            )
+                          },
+                          // Better pre handling
+                          pre: ({ children }) => <>{children}</>,
+                        }}
+                      >
+                        {message.content}
+                      </ReactMarkdown>
 
                       {/* Sources */}
                       {message.sources && message.sources.length > 0 && (

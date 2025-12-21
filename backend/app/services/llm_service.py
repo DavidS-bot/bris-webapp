@@ -26,6 +26,49 @@ Instrucciones:
 5. Usa el contexto proporcionado para fundamentar tus respuestas
 6. Responde en el idioma que te indiquen
 
+## Visualizaciones
+
+Cuando la respuesta contenga datos numericos, comparativas o distribuciones, incluye visualizaciones profesionales:
+
+### Tablas Markdown
+Para datos tabulares, usa tablas markdown:
+| Columna1 | Columna2 | Cambio |
+|----------|----------|--------|
+| Dato1    | 1,234    | +5.2%  |
+
+### Graficas Interactivas
+Para graficas, usa bloques de codigo con lenguaje "chart" y un objeto JSON:
+
+```chart
+{{"type": "bar", "title": "Titulo del Grafico", "data": [{{"name": "Categoria A", "value": 100}}, {{"name": "Categoria B", "value": 200}}]}}
+```
+
+Tipos de graficas disponibles:
+- "bar": Barras (comparativas entre categorias)
+- "line": Lineas (evoluciones temporales)
+- "pie": Circular (distribuciones porcentuales)
+- "donut": Donut (distribuciones con centro vacio)
+- "area": Areas (tendencias acumuladas)
+
+Propiedades adicionales del JSON:
+- title: Titulo del grafico (obligatorio)
+- xAxis: Etiqueta del eje X
+- yAxis: Etiqueta del eje Y
+- stacked: true para barras/areas apiladas
+- showLegend: true para mostrar leyenda
+
+Ejemplo de grafico circular:
+```chart
+{{"type": "pie", "title": "Distribucion de RWAs por Tipo de Riesgo", "data": [{{"name": "Riesgo de Credito", "value": 65}}, {{"name": "Riesgo de Mercado", "value": 20}}, {{"name": "Riesgo Operacional", "value": 15}}], "showLegend": true}}
+```
+
+IMPORTANTE: Usa visualizaciones cuando:
+- Hay datos numericos que comparar
+- Se muestran distribuciones o porcentajes
+- Hay evoluciones temporales
+- Se comparan multiples categorias
+- El usuario pregunta por estadisticas o metricas
+
 Contexto de documentos relevantes:
 {context}
 """
@@ -49,6 +92,49 @@ Instructions:
 4. If you don't have sufficient information, clearly indicate this
 5. Use the provided context to support your answers
 6. Respond in the requested language
+
+## Visualizations
+
+When your response contains numerical data, comparisons, or distributions, include professional visualizations:
+
+### Markdown Tables
+For tabular data, use markdown tables:
+| Column1  | Column2  | Change |
+|----------|----------|--------|
+| Data1    | 1,234    | +5.2%  |
+
+### Interactive Charts
+For charts, use code blocks with "chart" language and a JSON object:
+
+```chart
+{{"type": "bar", "title": "Chart Title", "data": [{{"name": "Category A", "value": 100}}, {{"name": "Category B", "value": 200}}]}}
+```
+
+Available chart types:
+- "bar": Bar charts (category comparisons)
+- "line": Line charts (time series)
+- "pie": Pie charts (percentage distributions)
+- "donut": Donut charts (distributions with center hole)
+- "area": Area charts (cumulative trends)
+
+Additional JSON properties:
+- title: Chart title (required)
+- xAxis: X-axis label
+- yAxis: Y-axis label
+- stacked: true for stacked bars/areas
+- showLegend: true to show legend
+
+Example pie chart:
+```chart
+{{"type": "pie", "title": "RWA Distribution by Risk Type", "data": [{{"name": "Credit Risk", "value": 65}}, {{"name": "Market Risk", "value": 20}}, {{"name": "Operational Risk", "value": 15}}], "showLegend": true}}
+```
+
+IMPORTANT: Use visualizations when:
+- There is numerical data to compare
+- Showing distributions or percentages
+- There are time-based trends
+- Comparing multiple categories
+- User asks about statistics or metrics
 
 Relevant document context:
 {context}

@@ -127,3 +127,119 @@ body {
 .prose-chat th {
   @apply bg-gray-100 font-semibold;
 }
+
+/* Santander Table Styles */
+.santander-table-wrapper {
+  @apply my-4 overflow-x-auto rounded-lg border border-gray-200 shadow-sm;
+}
+
+.santander-table {
+  @apply w-full border-collapse text-sm;
+}
+
+.santander-table-head {
+  background-color: var(--santander-red);
+}
+
+.santander-table-th {
+  @apply px-4 py-3 font-semibold text-white text-left;
+  background-color: var(--santander-red);
+}
+
+.santander-table-th:first-child {
+  @apply rounded-tl-lg;
+}
+
+.santander-table-th:last-child {
+  @apply rounded-tr-lg;
+}
+
+.santander-table-row {
+  @apply border-b border-gray-100 transition-colors;
+}
+
+.santander-table-row:hover {
+  @apply bg-gray-50;
+}
+
+.santander-table-row:nth-child(even) {
+  @apply bg-gray-50/50;
+}
+
+.santander-table-td {
+  @apply px-4 py-3 text-gray-700;
+}
+
+/* Tabular numbers for better alignment */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Chart container styles */
+.chart-container {
+  @apply my-4 p-4 bg-white rounded-lg border border-gray-200 shadow-sm;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Recharts overrides for Santander theme */
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: #E5E7EB;
+}
+
+.recharts-tooltip-wrapper {
+  @apply z-50;
+}
+
+.recharts-legend-item-text {
+  @apply text-gray-700 !important;
+}
+
+/* Responsive chart container */
+@media (max-width: 640px) {
+  .chart-container {
+    @apply p-2;
+  }
+
+  .recharts-wrapper {
+    font-size: 10px;
+  }
+}
+
+/* Enhanced bullet and list styling */
+.prose-chat ul {
+  @apply list-disc;
+}
+
+.prose-chat ol {
+  @apply list-decimal;
+}
+
+.prose-chat strong {
+  @apply font-semibold text-gray-900;
+}
+
+.prose-chat em {
+  @apply italic;
+}
+
+/* Blockquote styling */
+.prose-chat blockquote {
+  @apply border-l-4 border-santander-red pl-4 my-3 italic text-gray-600;
+}
+
+/* Horizontal rule */
+.prose-chat hr {
+  @apply my-4 border-gray-200;
+}
